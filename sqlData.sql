@@ -1,4 +1,4 @@
-DECLARE @FechaInicio  DATETIME = '2025/03/19'
+DECLARE @FechaInicio DATETIME = '2025/03/19'
 DECLARE @FechaFin DATETIME = '2025/04/30'
 
 select CONCAT(p.ApellidoPaterno, ' ', p.ApellidoMaterno, ' ', p.PrimerNombre, ' ', P.SegundoNombre) Operador,
@@ -20,4 +20,13 @@ join entrenamiento.Procesos p2 on pp.ProcesoId = p2.ProcesoId
 left join entrenamiento.PlanBases pb on pp.ProgramaId = pb.PlanId
 join entrenamiento.PlanBaseTipos pbt on pb.PlanBaseTipoId = pbt.TipoId 
 where hpa.Deleted is null
-AND hpa.Fecha BETWEEN @FechaInicio and @FechaFin
+AND (
+    -- Filtro original (eventos en la fecha exacta)
+    hpa.Fecha BETWEEN @FechaInicio AND @FechaFin
+    -- O registros cuyo período intersecta con el rango solicitado
+    OR (
+        (pb.FechaInicio BETWEEN @FechaInicio AND @FechaFin)
+        OR (pb.FechaFin BETWEEN @FechaInicio AND @FechaFin)
+        OR (pb.FechaInicio <= @FechaInicio AND pb.FechaFin >= @FechaFin)
+    )
+)
